@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import PageTitle from "../../../components/ui/PageTitle";
@@ -6,6 +6,63 @@ import {
   type WmsReceivingInboxSyncAndApplyOut,
   syncAndApplyWmsReceivingInbox,
 } from "../../../domains/procurement/ops/wmsReceivingInboxOpsClient";
+import {
+  type PurchaseOrderOut,
+  fetchPurchaseOrders,
+} from "../../../domains/procurement/read/purchaseOrdersClient";
+
+type LoadState =
+  | { state: "idle" | "loading" }
+  | { state: "success"; rows: PurchaseOrderOut[] }
+  | { state: "error"; message: string };
+
+const statusLabels: Record<string, string> = {
+  CREATED: "已创建",
+  CLOSED: "已关闭",
+  CANCELED: "已取消",
+};
+
+const completionLabels: Record<string, string> = {
+  NOT_RECEIVED: "未收货",
+  PARTIAL: "部分收货",
+  RECEIVED: "已收货",
+};
+
+function formatDateTime(value: string | null): string {
+  if (!value) return "-";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function formatAmount(value: string): string {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return value || "0.00";
+
+  return amount.toFixed(2);
+}
+
+function statusLabel(value: string): string {
+  return statusLabels[value] ?? value;
+}
+
+function completionLabel(value: string): string {
+  return completionLabels[value] ?? value;
+}
+
+function completionClass(value: string): string {
+  if (value === "RECEIVED") return "status-pill status-success";
+  if (value === "PARTIAL") return "status-pill status-warning";
+  return "status-pill status-muted";
+}
 
 function ResultPanel({ result }: { result: WmsReceivingInboxSyncAndApplyOut }) {
   return (
@@ -35,9 +92,35 @@ function ResultPanel({ result }: { result: WmsReceivingInboxSyncAndApplyOut }) {
 }
 
 export default function PurchaseOrdersPage() {
+  const [filters, setFilters] = useState({ q: "", status: "" });
+  const [appliedFilters, setAppliedFilters] = useState({ q: "", status: "" });
+  const [loadState, setLoadState] = useState<LoadState>({ state: "idle" });
+
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState("");
   const [syncResult, setSyncResult] = useState<WmsReceivingInboxSyncAndApplyOut | null>(null);
+
+  const loadOrders = useCallback(async () => {
+    setLoadState({ state: "loading" });
+
+    try {
+      const rows = await fetchPurchaseOrders({
+        limit: 100,
+        q: appliedFilters.q || undefined,
+        status: appliedFilters.status || undefined,
+      });
+      setLoadState({ state: "success", rows });
+    } catch (error) {
+      setLoadState({
+        state: "error",
+        message: error instanceof Error ? error.message : "加载采购列表失败",
+      });
+    }
+  }, [appliedFilters]);
+
+  useEffect(() => {
+    void loadOrders();
+  }, [loadOrders]);
 
   async function handleSync() {
     setSyncing(true);
@@ -51,12 +134,20 @@ export default function PurchaseOrdersPage() {
         apply_limit: 500,
       });
       setSyncResult(result);
+      await loadOrders();
     } catch (error) {
       setSyncError(error instanceof Error ? error.message : "同步 WMS 收货结果失败");
     } finally {
       setSyncing(false);
     }
   }
+
+  function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setAppliedFilters(filters);
+  }
+
+  const rows = loadState.state === "success" ? loadState.rows : [];
 
   return (
     <div className="page-stack">
@@ -86,11 +177,119 @@ export default function PurchaseOrdersPage() {
       {syncResult ? <ResultPanel result={syncResult} /> : null}
 
       <div className="page-card">
-        <h2>采购订单</h2>
-        <p>
-          下一刀接入 procurement-api 的采购列表合同。当前页面先完成 WMS 风格页面壳和 WMS
-          收货同步入口。
-        </p>
+        <form className="filter-bar" onSubmit={handleSearchSubmit}>
+          <label>
+            <span>关键词</span>
+            <input
+              value={filters.q}
+              placeholder="采购单号 / 供应商 / 采购人"
+              onChange={(event) => setFilters((prev) => ({ ...prev, q: event.target.value }))}
+            />
+          </label>
+
+          <label>
+            <span>订单状态</span>
+            <select
+              value={filters.status}
+              onChange={(event) =>
+                setFilters((prev) => ({ ...prev, status: event.target.value }))
+              }
+            >
+              <option value="">全部</option>
+              <option value="CREATED">已创建</option>
+              <option value="CLOSED">已关闭</option>
+              <option value="CANCELED">已取消</option>
+            </select>
+          </label>
+
+          <div className="filter-actions">
+            <button type="submit" className="button button-primary">
+              查询
+            </button>
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={() => {
+                setFilters({ q: "", status: "" });
+                setAppliedFilters({ q: "", status: "" });
+              }}
+            >
+              重置
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="page-card">
+        <div className="table-header">
+          <h2>采购订单</h2>
+          {loadState.state === "loading" ? <span>加载中…</span> : null}
+        </div>
+
+        {loadState.state === "error" ? (
+          <div className="alert alert-error">{loadState.message}</div>
+        ) : null}
+
+        {loadState.state !== "error" ? (
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>采购单号</th>
+                  <th>供应商</th>
+                  <th>目标仓库</th>
+                  <th>订单状态</th>
+                  <th>完成状态</th>
+                  <th>计划 / 已收 / 剩余</th>
+                  <th>采购时间</th>
+                  <th className="text-right">总金额</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="empty-cell">
+                      暂无采购单
+                    </td>
+                  </tr>
+                ) : (
+                  rows.map((row) => (
+                    <tr key={row.id}>
+                      <td>
+                        <div className="cell-strong">{row.po_no}</div>
+                        <div className="cell-muted">#{row.id}</div>
+                      </td>
+                      <td>
+                        <div>{row.supplier_name_snapshot}</div>
+                        <div className="cell-muted">{row.supplier_code_snapshot}</div>
+                      </td>
+                      <td>
+                        <div>{row.target_warehouse_name_snapshot || "-"}</div>
+                        <div className="cell-muted">
+                          {row.target_warehouse_code_snapshot || `#${row.target_warehouse_id}`}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="status-pill status-muted">{statusLabel(row.status)}</span>
+                      </td>
+                      <td>
+                        <span className={completionClass(row.completion_status)}>
+                          {completionLabel(row.completion_status)}
+                        </span>
+                      </td>
+                      <td>
+                        {row.total_ordered_base} / {row.total_received_base} /{" "}
+                        {row.total_remaining_base}
+                      </td>
+                      <td>{formatDateTime(row.purchase_time)}</td>
+                      <td className="text-right">{formatAmount(row.total_amount)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
       </div>
     </div>
   );
