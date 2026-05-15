@@ -489,3 +489,389 @@ select {
   color: #1d4ed8;
   text-decoration: underline;
 }
+
+/* procurement enterprise login page */
+.procurement-login-page {
+  align-items: center;
+  background:
+    radial-gradient(circle at top left, rgba(14, 165, 233, 0.16), transparent 34rem),
+    linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 24px;
+}
+
+.procurement-login-shell {
+  background: #ffffff;
+  border-radius: 28px;
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.18);
+  display: grid;
+  grid-template-columns: minmax(560px, 1.15fr) minmax(420px, 0.85fr);
+  max-width: 1500px;
+  min-height: 820px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.procurement-login-brand {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.97), rgba(2, 6, 23, 0.98)),
+    radial-gradient(circle at 30% 20%, rgba(16, 185, 129, 0.25), transparent 24rem);
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 820px;
+  padding: 72px;
+}
+
+.procurement-login-badge {
+  align-items: center;
+  align-self: flex-start;
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(52, 211, 153, 0.38);
+  border-radius: 999px;
+  color: #a7f3d0;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 10px;
+  letter-spacing: 0.02em;
+  padding: 10px 18px;
+}
+
+.procurement-login-badge-dot {
+  background: #6ee7b7;
+  border-radius: 999px;
+  box-shadow: 0 0 16px rgba(110, 231, 183, 0.9);
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+}
+
+.procurement-login-brand-copy {
+  display: grid;
+  gap: 24px;
+  margin-top: 72px;
+}
+
+.procurement-login-brand-copy h1 {
+  color: #ffffff;
+  font-size: clamp(44px, 4vw, 66px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.procurement-login-brand-copy p {
+  color: #cbd5e1;
+  font-size: 21px;
+  line-height: 1.85;
+  margin: 0;
+  max-width: 760px;
+}
+
+.procurement-login-flow-card {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(100, 116, 139, 0.55);
+  border-radius: 28px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  display: grid;
+  gap: 28px;
+  margin-top: 80px;
+  min-height: 330px;
+  overflow: hidden;
+  padding: 34px;
+  position: relative;
+}
+
+.procurement-login-flow-card::before {
+  background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.22) 1px, transparent 0);
+  background-size: 22px 22px;
+  content: "";
+  inset: 0;
+  opacity: 0.35;
+  position: absolute;
+}
+
+.procurement-login-flow-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.procurement-login-flow-top {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.procurement-login-flow-top div,
+.procurement-login-flow-bottom div {
+  background: rgba(15, 23, 42, 0.74);
+  border: 1px solid rgba(100, 116, 139, 0.62);
+  border-radius: 18px;
+  color: #cbd5e1;
+  display: grid;
+  min-height: 88px;
+  place-items: center;
+  text-align: center;
+}
+
+.procurement-login-flow-line {
+  align-items: center;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr auto 1fr;
+}
+
+.procurement-login-flow-line span {
+  background: linear-gradient(90deg, transparent, #34d399, #38bdf8);
+  height: 1px;
+}
+
+.procurement-login-flow-line span:last-child {
+  background: linear-gradient(90deg, #38bdf8, #34d399, transparent);
+}
+
+.procurement-login-flow-line strong {
+  color: #6ee7b7;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+}
+
+.procurement-login-flow-bottom {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.procurement-login-flow-bottom div {
+  justify-items: start;
+  padding: 18px;
+  place-items: initial;
+}
+
+.procurement-login-flow-bottom small {
+  color: #94a3b8;
+  display: block;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.procurement-login-flow-bottom strong {
+  color: #f8fafc;
+  font-size: 18px;
+}
+
+.procurement-login-brand footer {
+  border-top: 1px solid rgba(100, 116, 139, 0.36);
+  color: #94a3b8;
+  font-size: 15px;
+  margin-top: 56px;
+  padding-top: 26px;
+}
+
+.procurement-login-form-area {
+  align-items: center;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 72px;
+  position: relative;
+}
+
+.procurement-login-env {
+  background: #e2e8f0;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  color: #334155;
+  font-size: 15px;
+  font-weight: 800;
+  padding: 8px 18px;
+  position: absolute;
+  right: 48px;
+  top: 42px;
+}
+
+.procurement-login-form-card {
+  display: grid;
+  gap: 26px;
+  max-width: 460px;
+  width: 100%;
+}
+
+.procurement-login-form-title {
+  display: grid;
+  gap: 14px;
+  text-align: center;
+}
+
+.procurement-login-form-title h2 {
+  color: #0f172a;
+  font-size: 34px;
+  font-weight: 760;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.procurement-login-form-title p {
+  color: #64748b;
+  font-size: 16px;
+  line-height: 1.8;
+  margin: 0;
+}
+
+.procurement-login-error {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 12px;
+  color: #be123c;
+  font-size: 15px;
+  line-height: 1.6;
+  padding: 12px 14px;
+}
+
+.procurement-login-field {
+  display: grid;
+  gap: 10px;
+}
+
+.procurement-login-field span {
+  color: #475569;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.procurement-login-field input,
+.procurement-login-password-box {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  min-height: 54px;
+  padding: 0 16px;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.procurement-login-field input {
+  color: #0f172a;
+  font-size: 18px;
+  outline: none;
+  width: 100%;
+}
+
+.procurement-login-field input:focus,
+.procurement-login-password-box:focus-within {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.18);
+}
+
+.procurement-login-password-box {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.procurement-login-password-box input {
+  border: 0;
+  box-shadow: none;
+  min-height: auto;
+  padding: 0;
+}
+
+.procurement-login-password-box input:focus {
+  box-shadow: none;
+}
+
+.procurement-login-password-box button {
+  background: transparent;
+  border: 0;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 24px;
+  padding: 4px;
+}
+
+.procurement-login-submit {
+  background: #0284c7;
+  border: 0;
+  border-radius: 14px;
+  box-shadow: 0 18px 34px rgba(2, 132, 199, 0.28);
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 19px;
+  font-weight: 800;
+  min-height: 56px;
+  transition:
+    background 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.procurement-login-submit:hover:not(:disabled) {
+  background: #0369a1;
+  box-shadow: 0 22px 40px rgba(2, 132, 199, 0.34);
+  transform: translateY(-1px);
+}
+
+.procurement-login-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+@media (max-width: 1100px) {
+  .procurement-login-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .procurement-login-brand {
+    min-height: auto;
+    padding: 48px;
+  }
+
+  .procurement-login-form-area {
+    padding: 64px 32px;
+  }
+
+  .procurement-login-env {
+    position: static;
+    margin-bottom: 28px;
+  }
+}
+
+@media (max-width: 720px) {
+  .procurement-login-page {
+    padding: 0;
+  }
+
+  .procurement-login-shell {
+    border-radius: 0;
+    min-height: 100vh;
+  }
+
+  .procurement-login-brand {
+    padding: 36px 24px;
+  }
+
+  .procurement-login-brand-copy h1 {
+    font-size: 36px;
+  }
+
+  .procurement-login-brand-copy p {
+    font-size: 16px;
+  }
+
+  .procurement-login-flow-bottom,
+  .procurement-login-flow-top {
+    grid-template-columns: 1fr;
+  }
+
+  .procurement-login-form-area {
+    padding: 42px 22px;
+  }
+}
