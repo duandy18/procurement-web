@@ -44,6 +44,14 @@ export function SessionRuntimeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      setAccessToken(null);
+      setUser(null);
+      setNavigation(null);
+      setLoading(false);
+      return;
+    }
+
     void refresh();
   }, [refresh]);
 
