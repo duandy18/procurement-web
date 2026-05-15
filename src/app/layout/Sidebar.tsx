@@ -1,23 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 
-import {
-  buildNavigationChain,
-  fetchProcurementNavigation,
-  findNavigationPageByPath,
-  type ProcurementNavigationPage,
-} from "../../domains/procurement/page-registry/navigationClient";
-
-type LoadState =
-  | { state: "loading" }
-  | { state: "success"; items: ProcurementNavigationPage[] }
-  | { state: "error"; message: string };
+import { useSessionRuntime, type NavigationPage } from "../../shared/runtime";
 
 type OpenState = Record<string, boolean>;
 
 function sortPages(
-  a: Pick<ProcurementNavigationPage, "sort_order" | "name">,
-  b: Pick<ProcurementNavigationPage, "sort_order" | "name">,
+  a: Pick<NavigationPage, "sort_order" | "name">,
+  b: Pick<NavigationPage, "sort_order" | "name">,
 ): number {
   const sortDiff = a.sort_order - b.sort_order;
   if (sortDiff !== 0) return sortDiff;
@@ -25,79 +15,83 @@ function sortPages(
   return a.name.localeCompare(b.name, "zh-CN");
 }
 
-function pagePath(page: ProcurementNavigationPage): string | null {
-  return page.primary_route ?? page.route_prefixes[0] ?? null;
+function flattenPages(pages: NavigationPage[]): NavigationPage[] {
+  const out: NavigationPage[] = [];
+
+  function walk(nodes: NavigationPage[]) {
+    for (const node of nodes) {
+      out.push(node);
+      walk(node.children ?? []);
+    }
+  }
+
+  walk(pages);
+  return out;
 }
 
-function activeCodeSet(
-  pages: ProcurementNavigationPage[],
-  pathname: string,
-): Set<string> {
-  const active = findNavigationPageByPath(pages, pathname);
-  return new Set(buildNavigationChain(pages, active).map((item) => item.code));
+function normalizePath(path: string): string {
+  const raw = path.trim();
+  if (!raw || raw === "/") return "/";
+  const withLeading = raw.startsWith("/") ? raw : `/${raw}`;
+  return withLeading.replace(/\/+$/, "");
+}
+
+function routeMatches(pathname: string, routePrefix: string): boolean {
+  const current = normalizePath(pathname);
+  const prefix = normalizePath(routePrefix);
+
+  return current === prefix || current.startsWith(`${prefix}/`);
 }
 
 export function Sidebar() {
   const location = useLocation();
-  const [loadState, setLoadState] = useState<LoadState>({ state: "loading" });
+  const { navigation, user, logout } = useSessionRuntime();
   const [openSections, setOpenSections] = useState<OpenState>({});
 
-  useEffect(() => {
-    let alive = true;
+  const pages = useMemo(() => navigation?.pages ?? [], [navigation]);
+  const routeMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const route of navigation?.route_prefixes ?? []) {
+      if (!map.has(route.page_code)) {
+        map.set(route.page_code, route.route_prefix);
+      }
+    }
+    return map;
+  }, [navigation]);
 
-    fetchProcurementNavigation()
-      .then((data) => {
-        if (alive) {
-          setLoadState({ state: "success", items: data.items });
-        }
-      })
-      .catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : "导航加载失败";
-        if (alive) {
-          setLoadState({ state: "error", message });
-        }
-      });
+  const activeCodes = useMemo(() => {
+    const flattened = flattenPages(pages);
+    const byCode = new Map(flattened.map((page) => [page.code, page]));
+    const matched = (navigation?.route_prefixes ?? [])
+      .filter((route) => routeMatches(location.pathname, route.route_prefix))
+      .sort((a, b) => b.route_prefix.length - a.route_prefix.length)[0];
 
-    return () => {
-      alive = false;
-    };
-  }, []);
+    if (!matched) return new Set<string>();
 
-  const pages = useMemo<ProcurementNavigationPage[]>(() => {
-    if (loadState.state !== "success") return [];
-    return loadState.items;
-  }, [loadState]);
+    const output = new Set<string>();
+    let current: NavigationPage | undefined = byCode.get(matched.page_code);
 
-  const activeCodes = useMemo(
-    () => activeCodeSet(pages, location.pathname),
-    [pages, location.pathname],
-  );
+    while (current) {
+      output.add(current.code);
+      current = current.parent_code ? byCode.get(current.parent_code) : undefined;
+    }
 
-  useEffect(() => {
-    const activeRoot = pages.find((page) => activeCodes.has(page.code));
-    if (!activeRoot) return;
-
-    setOpenSections((prev) => ({
-      ...prev,
-      [activeRoot.code]: true,
-    }));
-  }, [activeCodes, pages]);
+    return output;
+  }, [location.pathname, navigation?.route_prefixes, pages]);
 
   function toggleSection(code: string) {
     setOpenSections((prev) => ({ ...prev, [code]: !(prev[code] ?? true) }));
   }
 
-  function renderChild(page: ProcurementNavigationPage) {
-    const path = pagePath(page);
-    const isActive = activeCodes.has(page.code);
-
+  function renderLink(page: NavigationPage) {
+    const path = routeMap.get(page.code);
     if (!path) return null;
 
     return (
       <NavLink
         key={page.code}
         to={path}
-        className={isActive ? "wms-sidebar-link is-active" : "wms-sidebar-link"}
+        className={activeCodes.has(page.code) ? "wms-sidebar-link is-active" : "wms-sidebar-link"}
       >
         {page.name}
       </NavLink>
@@ -112,13 +106,7 @@ export function Sidebar() {
       </div>
 
       <nav className="wms-sidebar-nav">
-        {loadState.state === "loading" ? (
-          <div className="wms-sidebar-message">导航加载中…</div>
-        ) : null}
-
-        {loadState.state === "error" ? (
-          <div className="wms-sidebar-message is-error">{loadState.message}</div>
-        ) : null}
+        {pages.length === 0 ? <div className="wms-sidebar-message">暂无可访问页面</div> : null}
 
         {pages
           .filter((page) => page.show_in_sidebar)
@@ -128,6 +116,7 @@ export function Sidebar() {
             const children = section.children
               .filter((child) => child.show_in_sidebar)
               .sort(sortPages);
+            const nodes = children.length > 0 ? children : [section];
 
             return (
               <section key={section.code} className="wms-sidebar-section">
@@ -140,15 +129,18 @@ export function Sidebar() {
                   <span>{isOpen ? "▾" : "▸"}</span>
                 </button>
 
-                {isOpen ? (
-                  <div className="wms-sidebar-children">
-                    {children.map(renderChild)}
-                  </div>
-                ) : null}
+                {isOpen ? <div className="wms-sidebar-children">{nodes.map(renderLink)}</div> : null}
               </section>
             );
           })}
       </nav>
+
+      <div className="wms-sidebar-footer">
+        <div>{user?.username ?? "-"}</div>
+        <button type="button" onClick={logout}>
+          退出登录
+        </button>
+      </div>
     </aside>
   );
 }
