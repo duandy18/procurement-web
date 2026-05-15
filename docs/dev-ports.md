@@ -4,7 +4,7 @@
 | --- | ---: | --- |
 | procurement-web | 5176 | Vite dev server |
 | procurement-api | 8015 | FastAPI / Uvicorn HTTP service |
-| procurement-db | 8030 | PostgreSQL host port, not used directly by the browser |
+| procurement-db | 5433 | Shared local PostgreSQL host port, not used directly by the browser |
 
 ## Environment variables
 
@@ -14,6 +14,6 @@
 
 ## Rules
 
-- The browser never connects to `8030`; that is PostgreSQL.
+- The browser never connects to `5433`; that is PostgreSQL.
 - procurement-web calls procurement-api on `8015`.
 - Keep the Vite dev server on `5176`.

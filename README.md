@@ -15,16 +15,12 @@ Standalone Procurement Web.
 | --- | ---: | --- |
 | procurement-web | 5176 | Vite dev server |
 | procurement-api | 8015 | FastAPI / Uvicorn HTTP service |
-| procurement-db | 8030 | PostgreSQL host port, not a browser API |
+| procurement-db | 5433 | Shared local PostgreSQL host port, not a browser API |
 
 Create `.env.local` from `.env.local.example`:
 
-```bash
-cp .env.local.example .env.local
-```
+    cp .env.local.example .env.local
 
 Start the frontend:
 
-```bash
-pnpm dev
-```
+    pnpm dev
