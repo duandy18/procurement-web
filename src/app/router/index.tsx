@@ -5,6 +5,7 @@ import { AppLayout } from "../layout/AppLayout";
 import {
   LoginPage,
   PurchaseOrderCreatePage,
+  PurchaseOrderDetailPage,
   PurchaseOrdersPage,
   UsersPage,
 } from "./lazyPages";
@@ -37,6 +38,10 @@ export const router = createBrowserRouter([
       {
         path: "procurement/purchase-orders/new",
         element: withSuspense(<PurchaseOrderCreatePage />),
+      },
+      {
+        path: "procurement/purchase-orders/:poId",
+        element: withSuspense(<PurchaseOrderDetailPage />),
       },
       {
         path: "procurement/system/users",
