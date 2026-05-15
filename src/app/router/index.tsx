@@ -4,14 +4,13 @@ import { Navigate, createBrowserRouter } from "react-router-dom";
 import { AppLayout } from "../layout/AppLayout";
 import {
   LoginPage,
-  PmsProjectionStatusPage,
-  ProcurementDashboardPage,
+  PurchaseOrderCreatePage,
   PurchaseOrdersPage,
-  PurchaseReportsPage,
+  UsersPage,
 } from "./lazyPages";
 
 function withSuspense(element: ReactNode): ReactElement {
-  return <Suspense fallback={<div className="page-card">页面加载中...</div>}>{element}</Suspense>;
+  return <Suspense fallback={<div className="route-loading">页面加载中…</div>}>{element}</Suspense>;
 }
 
 export const router = createBrowserRouter([
@@ -21,7 +20,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/procurement" replace />,
+        element: <Navigate to="/procurement/purchase-orders" replace />,
       },
       {
         path: "login",
@@ -29,20 +28,24 @@ export const router = createBrowserRouter([
       },
       {
         path: "procurement",
-        element: withSuspense(<ProcurementDashboardPage />),
+        element: <Navigate to="/procurement/purchase-orders" replace />,
       },
       {
         path: "procurement/purchase-orders",
         element: withSuspense(<PurchaseOrdersPage />),
       },
       {
-        path: "procurement/purchase-reports",
-        element: withSuspense(<PurchaseReportsPage />),
+        path: "procurement/purchase-orders/new",
+        element: withSuspense(<PurchaseOrderCreatePage />),
       },
       {
-        path: "procurement/pms-projection-status",
-        element: withSuspense(<PmsProjectionStatusPage />),
+        path: "procurement/system/users",
+        element: withSuspense(<UsersPage />),
       },
     ],
+  },
+  {
+    path: "*",
+    element: <Navigate to="/procurement/purchase-orders" replace />,
   },
 ]);
