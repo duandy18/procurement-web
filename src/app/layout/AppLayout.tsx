@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 
 import { Sidebar } from "./Sidebar";
@@ -5,14 +6,16 @@ import { Topbar } from "./Topbar";
 
 export function AppLayout() {
   return (
-    <div className="app-shell">
+    <div className="wms-app-shell">
       <Sidebar />
-      <main className="app-main">
+      <div className="wms-app-main">
         <Topbar />
-        <section className="app-content">
-          <Outlet />
-        </section>
-      </main>
+        <main className="wms-app-content">
+          <Suspense fallback={<div className="route-loading">页面加载中…</div>}>
+            <Outlet />
+          </Suspense>
+        </main>
+      </div>
     </div>
   );
 }
