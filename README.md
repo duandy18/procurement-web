@@ -2,9 +2,29 @@
 
 Standalone Procurement Web.
 
-Boundary rules:
+## Boundary rules
 
 - Procurement Web consumes procurement-api contracts.
 - Procurement Web does not directly consume WMS purchase owner APIs.
 - Procurement Web does not directly read PMS owner APIs.
-- PMS product data must come through PMS read/projection contracts exposed to Procurement.
+- PMS product data must come through procurement-api contracts.
+
+## Local dev ports
+
+| Component | Port | Purpose |
+| --- | ---: | --- |
+| procurement-web | 5176 | Vite dev server |
+| procurement-api | 8015 | FastAPI / Uvicorn HTTP service |
+| procurement-db | 8030 | PostgreSQL host port, not a browser API |
+
+Create `.env.local` from `.env.local.example`:
+
+```bash
+cp .env.local.example .env.local
+```
+
+Start the frontend:
+
+```bash
+pnpm dev
+```
