@@ -1,4 +1,4 @@
-// 拆分说明：新建采购单页已接入 procurement-api 创建合同；供应商、商品、单位通过 procurement-api PMS BFF 读取，前端不直连 PMS，不调用 WMS 旧采购接口。
+// 拆分说明：新建采购单页已接入 procurement-api 创建合同；供应商、商品、单位通过 procurement-api PMS BFF 读取，仓库通过 procurement-api WMS BFF 读取；前端不直连 PMS / WMS，不调用 WMS 旧采购接口。
 
 import { Link } from "react-router-dom";
 
@@ -14,7 +14,7 @@ export default function PurchaseOrderCreatePage() {
     <div className="page-stack">
       <PageTitle
         title="新建采购单"
-        description="录入采购计划并创建采购单。供应商、商品、单位通过 procurement-api 读取 PMS 合同。"
+        description="录入采购计划并创建采购单。供应商、商品、单位、仓库均通过 procurement-api BFF 读取。"
         actions={
           <Link className="button button-secondary" to="/procurement/purchase-orders">
             返回采购列表
@@ -35,11 +35,16 @@ export default function PurchaseOrderCreatePage() {
         <PurchaseOrderCreateHeaderForm
           header={controller.header}
           suppliers={controller.suppliers}
+          warehouses={controller.warehouses}
           loadingSuppliers={controller.loadingSuppliers}
+          loadingWarehouses={controller.loadingWarehouses}
           onChangeSupplier={controller.changeSupplier}
           onChangeHeader={controller.updateHeader}
           onReloadSuppliers={() => {
             void controller.loadSuppliers();
+          }}
+          onReloadWarehouses={() => {
+            void controller.loadWarehouses();
           }}
         />
 

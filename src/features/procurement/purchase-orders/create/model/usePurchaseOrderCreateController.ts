@@ -5,10 +5,12 @@ import {
   type PmsReadItemBasicOut,
   type PmsReadSupplierOut,
   type PmsReadUomOut,
+  type WmsReadWarehouseOut,
   createPurchaseOrder,
   fetchPmsItemBasics,
   fetchPmsItemUoms,
   fetchPmsSuppliers,
+  fetchWmsWarehouses,
 } from "../../../../../domains/procurement/read/purchaseOrdersClient";
 
 export interface PurchaseOrderCreateHeaderDraft {
@@ -109,7 +111,7 @@ export function usePurchaseOrderCreateController() {
 
   const [header, setHeader] = useState<PurchaseOrderCreateHeaderDraft>({
     supplierId: "",
-    targetWarehouseId: "1",
+    targetWarehouseId: "",
     purchaser: "Andy",
     purchaseTime: nowForDatetimeLocal(),
     remark: "",
@@ -117,10 +119,12 @@ export function usePurchaseOrderCreateController() {
 
   const [lines, setLines] = useState<PurchaseOrderCreateLineDraft[]>([newLine()]);
   const [suppliers, setSuppliers] = useState<PmsReadSupplierOut[]>([]);
+  const [warehouses, setWarehouses] = useState<WmsReadWarehouseOut[]>([]);
   const [items, setItems] = useState<PmsReadItemBasicOut[]>([]);
   const [uomsByLineId, setUomsByLineId] = useState<Record<string, PmsReadUomOut[]>>({});
   const [itemKeyword, setItemKeyword] = useState("");
   const [loadingSuppliers, setLoadingSuppliers] = useState(false);
+  const [loadingWarehouses, setLoadingWarehouses] = useState(false);
   const [loadingItems, setLoadingItems] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
@@ -138,6 +142,31 @@ export function usePurchaseOrderCreateController() {
       setError(err instanceof Error ? err.message : "加载供应商失败");
     } finally {
       setLoadingSuppliers(false);
+    }
+  }, []);
+
+  const loadWarehouses = useCallback(async () => {
+    setLoadingWarehouses(true);
+    setError("");
+
+    try {
+      const nextWarehouses = await fetchWmsWarehouses({ active: true, limit: 200 });
+      setWarehouses(nextWarehouses);
+
+      setHeader((prev) => {
+        if (prev.targetWarehouseId || nextWarehouses.length === 0) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          targetWarehouseId: String(nextWarehouses[0].id),
+        };
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "加载目标仓库失败");
+    } finally {
+      setLoadingWarehouses(false);
     }
   }, []);
 
@@ -169,6 +198,10 @@ export function usePurchaseOrderCreateController() {
   useEffect(() => {
     void loadSuppliers();
   }, [loadSuppliers]);
+
+  useEffect(() => {
+    void loadWarehouses();
+  }, [loadWarehouses]);
 
   useEffect(() => {
     void loadItems();
@@ -249,7 +282,7 @@ export function usePurchaseOrderCreateController() {
       const targetWarehouseId = positiveNumber(header.targetWarehouseId);
 
       if (!supplierId) throw new Error("请选择供应商");
-      if (!targetWarehouseId) throw new Error("目标仓库 ID 必须大于 0");
+      if (!targetWarehouseId) throw new Error("请选择目标仓库");
       if (!header.purchaser.trim()) throw new Error("采购人不能为空");
 
       const payloadLines = lines.map((line, index) => {
@@ -293,10 +326,12 @@ export function usePurchaseOrderCreateController() {
     header,
     lines,
     suppliers,
+    warehouses,
     items,
     uomsByLineId,
     itemKeyword,
     loadingSuppliers,
+    loadingWarehouses,
     loadingItems,
     submitting,
     message,
@@ -309,6 +344,7 @@ export function usePurchaseOrderCreateController() {
     addLine,
     removeLine,
     loadSuppliers,
+    loadWarehouses,
     loadItems,
     submit,
   };

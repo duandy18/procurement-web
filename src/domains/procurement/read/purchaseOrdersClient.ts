@@ -106,6 +106,13 @@ export interface PmsReadUomOut {
   is_outbound_default: boolean;
 }
 
+export interface WmsReadWarehouseOut {
+  id: number;
+  code: string | null;
+  name: string;
+  active: boolean;
+}
+
 export interface PurchaseOrderCreateLineIn {
   line_no: number;
   item_id: number;
@@ -327,6 +334,22 @@ function parseUom(value: unknown): PmsReadUomOut | null {
   };
 }
 
+function parseWarehouse(value: unknown): WmsReadWarehouseOut | null {
+  if (!isRecord(value)) return null;
+
+  const id = asNumber(value.id);
+  const name = asString(value.name).trim();
+
+  if (id <= 0 || !name) return null;
+
+  return {
+    id,
+    code: asNullableString(value.code),
+    name,
+    active: asBoolean(value.active),
+  };
+}
+
 async function readJsonArray(response: Response, message: string): Promise<unknown[]> {
   if (!response.ok) {
     const body = await response.text();
@@ -423,6 +446,25 @@ export async function fetchPmsItemUoms(itemId: number): Promise<PmsReadUomOut[]>
   );
 
   return payload.map(parseUom).filter((item): item is PmsReadUomOut => item !== null);
+}
+
+export async function fetchWmsWarehouses(params: {
+  active?: boolean | null;
+  limit?: number;
+} = {}): Promise<WmsReadWarehouseOut[]> {
+  const payload = await readJsonArray(
+    await fetch(
+      apiUrl(
+        `/procurement/read/v1/wms/warehouses${buildQuery({
+          active: params.active ?? true,
+          limit: params.limit ?? 200,
+        })}`,
+      ),
+    ),
+    "加载目标仓库失败",
+  );
+
+  return payload.map(parseWarehouse).filter((item): item is WmsReadWarehouseOut => item !== null);
 }
 
 export async function createPurchaseOrder(payload: PurchaseOrderCreateIn): Promise<PurchaseOrderOut> {
