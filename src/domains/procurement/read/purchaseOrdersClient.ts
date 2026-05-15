@@ -3,6 +3,32 @@ import { apiUrl } from "../../../lib/api";
 export type PurchaseOrderStatus = "CREATED" | "CLOSED" | "CANCELED";
 export type PurchaseOrderCompletionStatus = "NOT_RECEIVED" | "PARTIAL" | "RECEIVED";
 
+export interface PurchaseOrderLineOut {
+  id: number;
+  po_id: number;
+  line_no: number;
+
+  item_id: number;
+  item_sku_snapshot: string | null;
+  item_name_snapshot: string;
+  spec_text_snapshot: string | null;
+
+  purchase_uom_id_snapshot: number;
+  purchase_uom_name_snapshot: string;
+  purchase_ratio_to_base_snapshot: number;
+
+  qty_ordered_input: string;
+  qty_ordered_base: number;
+
+  supply_price: string | null;
+  discount_amount: string | null;
+  line_amount: string;
+  remark: string | null;
+
+  created_at: string;
+  updated_at: string;
+}
+
 export interface PurchaseOrderOut {
   id: number;
   po_no: string;
@@ -35,6 +61,8 @@ export interface PurchaseOrderOut {
   total_remaining_base: number;
   completion_status: PurchaseOrderCompletionStatus;
   last_received_at: string | null;
+
+  lines: PurchaseOrderLineOut[];
 }
 
 export interface PurchaseOrderListParams {
@@ -89,6 +117,42 @@ function buildQuery(params: PurchaseOrderListParams): string {
   return value ? `?${value}` : "";
 }
 
+function parseLine(value: unknown): PurchaseOrderLineOut | null {
+  if (!isRecord(value)) return null;
+
+  const id = asNumber(value.id);
+  const poId = asNumber(value.po_id);
+  const lineNo = asNumber(value.line_no);
+
+  if (id <= 0 || poId <= 0 || lineNo <= 0) return null;
+
+  return {
+    id,
+    po_id: poId,
+    line_no: lineNo,
+
+    item_id: asNumber(value.item_id),
+    item_sku_snapshot: asNullableString(value.item_sku_snapshot),
+    item_name_snapshot: asString(value.item_name_snapshot),
+    spec_text_snapshot: asNullableString(value.spec_text_snapshot),
+
+    purchase_uom_id_snapshot: asNumber(value.purchase_uom_id_snapshot),
+    purchase_uom_name_snapshot: asString(value.purchase_uom_name_snapshot),
+    purchase_ratio_to_base_snapshot: asNumber(value.purchase_ratio_to_base_snapshot),
+
+    qty_ordered_input: asString(value.qty_ordered_input),
+    qty_ordered_base: asNumber(value.qty_ordered_base),
+
+    supply_price: asNullableString(value.supply_price),
+    discount_amount: asNullableString(value.discount_amount),
+    line_amount: asString(value.line_amount),
+    remark: asNullableString(value.remark),
+
+    created_at: asString(value.created_at),
+    updated_at: asString(value.updated_at),
+  };
+}
+
 function parsePurchaseOrder(value: unknown): PurchaseOrderOut | null {
   if (!isRecord(value)) return null;
 
@@ -96,6 +160,10 @@ function parsePurchaseOrder(value: unknown): PurchaseOrderOut | null {
   const poNo = asString(value.po_no).trim();
 
   if (id <= 0 || !poNo) return null;
+
+  const lines = Array.isArray(value.lines)
+    ? value.lines.map(parseLine).filter((item): item is PurchaseOrderLineOut => item !== null)
+    : [];
 
   return {
     id,
@@ -129,6 +197,8 @@ function parsePurchaseOrder(value: unknown): PurchaseOrderOut | null {
     total_remaining_base: asNumber(value.total_remaining_base),
     completion_status: parseCompletionStatus(value.completion_status),
     last_received_at: asNullableString(value.last_received_at),
+
+    lines,
   };
 }
 
@@ -153,4 +223,22 @@ export async function fetchPurchaseOrders(
   return payload
     .map(parsePurchaseOrder)
     .filter((item): item is PurchaseOrderOut => item !== null);
+}
+
+export async function fetchPurchaseOrder(poId: number): Promise<PurchaseOrderOut> {
+  const response = await fetch(apiUrl(`/procurement/read/v1/purchase-orders/${poId}`));
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`加载采购单详情失败：${response.status} ${body}`);
+  }
+
+  const payload: unknown = await response.json();
+  const parsed = parsePurchaseOrder(payload);
+
+  if (!parsed) {
+    throw new Error("采购单详情响应格式错误");
+  }
+
+  return parsed;
 }

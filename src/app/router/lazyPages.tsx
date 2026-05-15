@@ -10,6 +10,10 @@ export const PurchaseOrderCreatePage = lazy(
   () => import("../../features/procurement/purchase-orders/PurchaseOrderCreatePage"),
 );
 
+export const PurchaseOrderDetailPage = lazy(
+  () => import("../../features/procurement/purchase-orders/PurchaseOrderDetailPage"),
+);
+
 export const UsersPage = lazy(
   () => import("../../features/procurement/system/users/UsersPage"),
 );

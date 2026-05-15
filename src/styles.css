@@ -479,3 +479,13 @@ select {
     justify-content: flex-start;
   }
 }
+
+.table-link {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.table-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}

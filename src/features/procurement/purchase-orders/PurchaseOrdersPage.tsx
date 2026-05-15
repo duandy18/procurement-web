@@ -256,7 +256,12 @@ export default function PurchaseOrdersPage() {
                   rows.map((row) => (
                     <tr key={row.id}>
                       <td>
-                        <div className="cell-strong">{row.po_no}</div>
+                        <Link
+                          className="table-link"
+                          to={`/procurement/purchase-orders/${row.id}`}
+                        >
+                          {row.po_no}
+                        </Link>
                         <div className="cell-muted">#{row.id}</div>
                       </td>
                       <td>
